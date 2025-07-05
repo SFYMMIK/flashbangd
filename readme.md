@@ -1,3 +1,18 @@
+# Flashbangd version 1.0.1:
+- added experimental windows compatibility (might have bugs/issues)
+- added minimizing to taskbar tray (no window, just working and inside the tray)
+
+# Flashbangd version 1.0.2 sneak-peek:
+- i will make it faster by probably making it into c++ or any other language faster than python (50/50 chance)
+- better compatibility for wayland
+
+## rest of readme
+
+## |
+## |
+## |
+## v
+
 # 💣 Flashbangd – The Terminal Flashbang Daemon
 
 A **devious, fullscreen flashbang simulator** for Linux, written in Python with PyQt6.  

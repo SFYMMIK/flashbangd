@@ -4,22 +4,26 @@ import time
 import threading
 import configparser
 import os
+import platform
 
-from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QGraphicsOpacityEffect
-from PyQt6.QtGui import QPixmap, QGuiApplication
+from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QGraphicsOpacityEffect, QSystemTrayIcon, QMenu, QAction
+from PyQt6.QtGui import QPixmap, QGuiApplication, QIcon
 from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation
 
 import pygame
 
-# Detect session type
+# Detect OS and session type
+is_windows = platform.system() == "Windows"
 is_wayland = os.environ.get("XDG_SESSION_TYPE", "").lower() == "wayland"
-is_x11 = not is_wayland
+is_x11 = not is_windows and not is_wayland
 
+# Optional hotkey support (Linux/X11 or Windows only)
 try:
-    if is_x11:
-        import keyboard
+    import keyboard
+    keyboard_available = True
 except ImportError:
     print("❌ 'keyboard' module not installed. Run: pip install keyboard")
+    keyboard_available = False
 
 class Flashbang:
     def __init__(self, image_path):
@@ -74,21 +78,42 @@ class Flashbang:
 def main():
     config = configparser.ConfigParser()
     config.read("config.ini")
-    delay_min = int(config["settings"].get("delay_min", 45))
-    delay_max = int(config["settings"].get("delay_max", 600))
-    image_path = config["settings"].get("image", "assets/flashbang.jpg")
-    sound_path = config["settings"].get("sound", "assets/flashbang.mp3")
+    image_path = os.path.normpath(config["settings"].get("image", "assets/flashbang.jpg"))
+    sound_path = os.path.normpath(config["settings"].get("sound", "assets/flashbang.mp3"))
 
-    # Initialize sound early for zero-latency
+    # Get delay range from config only if available and valid
+    try:
+        delay_min = int(config["settings"]["delay_min"])
+        delay_max = int(config["settings"]["delay_max"])
+    except (KeyError, ValueError):
+        print("⚠️ Invalid or missing delay_min/delay_max in config.ini")
+        delay_min, delay_max = 45, 600  # fallback defaults
+
+    # Initialize sound
     pygame.mixer.init()
     sound = pygame.mixer.Sound(sound_path)
 
     app = QApplication(sys.argv)
+    app.setQuitOnLastWindowClosed(False)
     flasher = Flashbang(image_path)
 
     def trigger_flashbang():
         flasher.trigger()
         sound.play()
+
+    # System tray icon
+    tray = QSystemTrayIcon(QIcon(image_path), parent=app)
+    menu = QMenu()
+    trigger_action = QAction("Trigger Flashbang")
+    trigger_action.triggered.connect(trigger_flashbang)
+    quit_action = QAction("Quit")
+    quit_action.triggered.connect(app.quit)
+    menu.addAction(trigger_action)
+    menu.addSeparator()
+    menu.addAction(quit_action)
+    tray.setContextMenu(menu)
+    tray.setToolTip("flashbangd")
+    tray.show()
 
     if "--trigger" in sys.argv:
         trigger_flashbang()
@@ -103,15 +128,15 @@ def main():
 
     threading.Thread(target=flashbang_loop, daemon=True).start()
 
-    if is_x11:
+    if keyboard_available:
         try:
             keyboard.add_hotkey("f10", trigger_flashbang)
             print("✅ Global hotkey F10 registered.")
         except Exception as e:
             print(f"❌ Could not register F10: {e}")
-    elif is_wayland:
-        print("⚠️ Wayland detected — global hotkeys not supported.")
-        print("💡 Use: `--trigger` with a Hyprland keybind.")
+    else:
+        print("⚠️ Global hotkey support not available.")
+        print("💡 Use: `--trigger` to manually trigger the flashbang.")
 
     sys.exit(app.exec())
 
