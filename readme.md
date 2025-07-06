@@ -1,55 +1,45 @@
-# Flashbangd version 1.0.1:
-- added experimental windows compatibility (might have bugs/issues)
-- added minimizing to taskbar tray (no window, just working and inside the tray)
+# Flashbangd version 1.1
 
-# Flashbangd version 1.0.2 sneak-peek:
-- i will make it faster by probably making it into c++ or any other language faster than python (50/50 chance)
-- better compatibility for wayland
+- ✅ Full Windows compatibility
+- ✅ Fully minimized tray daemon (no terminal, no window)
+- ✅ Troll Quit button with fake exit + secret minigame
+- ✅ Flash image appears fullscreen for 2s and disappears
+- ✅ F10 global hotkey or --trigger support
+- ✅ Works on Linux and Windows with tray menu
+- ✅ Configurable image/sound/delay via `config.ini`
+- ✅ Silent background operation (no terminal messages)
 
-## rest of readme
-
-## |
-## |
-## |
-## v
+---
 
 # 💣 Flashbangd – The Terminal Flashbang Daemon
 
-A **devious, fullscreen flashbang simulator** for Linux, written in Python with PyQt6.  
+A **devious, fullscreen flashbang simulator** for Linux and Windows, written in Python with wxPython.  
 It plays a loud sound and blinds you with a fullscreen image at **random intervals**… or instantly when you press a key (F10).  
-Supports **multi-monitor**, **zero-latency audio**, and **runs hidden in the background**.
+Supports **system tray**, **random delay**, **troll exit game**, and **hidden background execution**.
 
 ---
 
 ## 📦 Features
 
-- ✅ Multi-monitor fullscreen support  
-- ✅ Flashbang image with fade-out effect  
-- ✅ Instant sound playback (no latency!)  
-- ✅ Random flash timing (from `45s` to `10min+`)  
-- ✅ X11 global hotkey (F10) support  
-- ✅ Wayland support via `--trigger` mode (bind with Hyprland)  
-- ✅ Background execution via `nohup` or `systemd --user`  
-- ✅ Configurable image, sound, timing, and hotkey  
+- ✅ System tray support (Windows/Linux)
+- ✅ Fullscreen flash image
+- ✅ Instant sound playback (no latency!)
+- ✅ Random flash timing (from `45s` to `10min+`)
+- ✅ Troll exit button with minigame to unlock real exit
+- ✅ F10 global hotkey (X11 only) or `--trigger`
+- ✅ Silent operation (no logs in terminal)
+- ✅ Configurable image, sound, delay
 
 ---
 
 ## 🧰 Requirements
 
 - Python 3.9+
-- Linux (X11 or Wayland)
-- `mpv` (optional legacy fallback, not used now)
+- Linux (X11 or Wayland) or Windows 10/11
 - Python libraries:
   ```
-  pip install PyQt6 keyboard pygame
+  pip install wxPython pygame keyboard
   ```
-
-> ⚠️ On **X11**, global hotkey detection requires `sudo` for `keyboard` to work:
-```bash
-sudo python3 flashbang.py
-```
-
-> 🟡 On **Wayland**, hotkeys are blocked. Use Hyprland keybinds with `--trigger` (see below).
 
 ---
 
@@ -57,12 +47,12 @@ sudo python3 flashbang.py
 
 ```
 flashbangd/
-├── flashbang.py          # main script
-├── config.ini            # configuration
-├── requirements.txt      # pip dependencies
+├── flashbangd_wx.py       # main script
+├── config.ini             # configuration
+├── requirements.txt       # pip dependencies
 └── assets/
-    ├── flashbang.jpg     # your image
-    └── flashbang.mp3     # your sound effect
+    ├── flashbang.jpg      # your image
+    └── flashbang.mp3      # your sound effect
 ```
 
 ---
@@ -71,21 +61,17 @@ flashbangd/
 
 ```ini
 [settings]
-delay_min = 45            # Minimum delay between flashes (in seconds)
-delay_max = 600           # Maximum delay between flashes (in seconds)
-image = assets/flashbang.jpg     # Image path
-sound = assets/flashbang.mp3     # Sound path
-fullscreen = true
-multi_monitor = true
-test_key = F10
+delay_min = 45
+delay_max = 600
+image = assets/flashbang.jpg
+sound = assets/flashbang.mp3
 ```
 
 🧠 To adjust how often it flashbangs you:  
 - Increase `delay_min` and `delay_max`
 
 🎵 To change the flash sound:  
-- Replace `assets/flashbang.mp3` with your own  
-- Keep it short and punchy for best effect
+- Replace `assets/flashbang.mp3` with your own
 
 🖼 To change the image:  
 - Replace `assets/flashbang.jpg` with your own full-screen image
@@ -94,50 +80,39 @@ test_key = F10
 
 ## 🧪 How to Run
 
-### 🚀 Normal Mode (X11 or Wayland)
+### 🟪 Linux:
 ```bash
-python3 flashbang.py
+python3 flashbangd_wx.py
 ```
 
-### ⚡ Manual Test Mode
+### 🟦 Windows:
+Double-click the compiled `.exe` or run with:
+
 ```bash
-python3 flashbang.py --trigger
+python flashbangd_wx.py
 ```
 
-### 🩻 Run in Background (Safe from terminal close)
+### ⚡ Manual Trigger:
 ```bash
-nohup python3 flashbang.py &
+python flashbangd_wx.py --trigger
 ```
 
-Or disown:
-```bash
-python3 flashbang.py & disown
-```
+### There will be a prebuilt windows .exe file here
 
 ---
 
-## 🪟 Global F10 Hotkey (X11 only)
+## 🪟 Global Hotkey (F10)
 
 - Works out of the box on X11 (needs `sudo`)
 ```bash
-sudo python3 flashbang.py
+sudo python3 flashbangd_wx.py
 ```
+
+On Wayland: use `--trigger` from your compositor's keybind (e.g., Hyprland).
 
 ---
 
-## 🌀 Wayland Support (Hyprland)
-
-- Add this to `~/.config/hypr/hyprland.conf`:
-
-```ini
-bind = ,F10, exec, python /absolute/path/to/flashbang.py --trigger
-```
-
-This gives you a working flashbang even without global keyhooks.
-
----
-
-## 🛠 Run on Startup (systemd user service)
+## 🛠 Run on Startup (Linux systemd user service)
 
 1. Create service file:
 
@@ -153,7 +128,7 @@ Paste:
 Description=Flashbang Daemon
 
 [Service]
-ExecStart=/usr/bin/python3 /absolute/path/to/flashbang.py
+ExecStart=/usr/bin/python3 /absolute/path/to/flashbangd_wx.py
 Restart=always
 
 [Install]
@@ -169,12 +144,14 @@ systemctl --user enable --now flashbang.service
 
 ---
 
-## 🧠 Tips
+## 🎮 Troll Quit Behavior
 
-- Flashbangs occur when you least expect it.
-- Use with caution. Or don’t. 😈
-- Best paired with memes, or obnoxiously loud SFX.
-- Feel free to remaster!
+- Clicking "Quit" opens a fake dialog.
+- If you click "Okay" → nothing happens.
+- If you click "What?" → minigame with 9 tiles appears.
+- Only one random tile has a big **X** to quit.
+- Others show "you lost" and offer Retry or Okay.
+- You can't escape easily. 😈
 
 ---
 
@@ -182,5 +159,4 @@ systemctl --user enable --now flashbang.service
 
 BSD-3 Clause
 
-## quick info
-Do what you want. Just don’t sue me when you flashbang your boss.
+> Do what you want. Just don’t sue me when you flashbang your boss.
