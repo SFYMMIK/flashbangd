@@ -82,19 +82,19 @@ sound = assets/flashbang.mp3
 
 ### 🟪 Linux:
 ```bash
-python3 flashbangd_wx.py
+python3 flashbangd.py
 ```
 
 ### 🟦 Windows:
 Double-click the compiled `.exe` or run with:
 
 ```bash
-python flashbangd_wx.py
+python flashbangd.py
 ```
 
 ### ⚡ Manual Trigger:
 ```bash
-python flashbangd_wx.py --trigger
+python flashbangd.py --trigger
 ```
 
 ### There will be a prebuilt windows .exe file here
@@ -105,7 +105,7 @@ python flashbangd_wx.py --trigger
 
 - Works out of the box on X11 (needs `sudo`)
 ```bash
-sudo python3 flashbangd_wx.py
+sudo python3 flashbangd.py
 ```
 
 On Wayland: use `--trigger` from your compositor's keybind (e.g., Hyprland).
@@ -128,7 +128,7 @@ Paste:
 Description=Flashbang Daemon
 
 [Service]
-ExecStart=/usr/bin/python3 /absolute/path/to/flashbangd_wx.py
+ExecStart=/usr/bin/python3 /absolute/path/to/flashbangd.py
 Restart=always
 
 [Install]
